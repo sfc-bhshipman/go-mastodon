@@ -1,3 +1,8 @@
+# Do not use this version!
+
+Just a development fork of [mattn/go-mastodon](https://github.com/mattn/go-mastodon), so use it instead.
+
+
 # go-mastodon
 
 [![Build Status](https://github.com/mattn/go-mastodon/workflows/test/badge.svg?branch=master)](https://github.com/mattn/go-mastodon/actions?query=workflow%3Atest)
