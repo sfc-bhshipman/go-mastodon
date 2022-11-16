@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/mattn/go-mastodon"
+	"github.com/RasmusLindroth/go-mastodon"
 )
 
 func main() {
@@ -51,7 +51,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/mattn/go-mastodon"
+	"github.com/RasmusLindroth/go-mastodon"
 )
 
 func main() {
