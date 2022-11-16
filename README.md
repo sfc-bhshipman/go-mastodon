@@ -91,6 +91,7 @@ func main() {
 * [x] GET /api/v1/accounts/:id/lists
 * [x] GET /api/v1/accounts/relationships
 * [x] GET /api/v1/accounts/search
+* [x] GET /api/v1/apps/verify_credentials
 * [x] GET /api/v1/bookmarks
 * [x] POST /api/v1/apps
 * [x] GET /api/v1/blocks
@@ -157,8 +158,8 @@ func main() {
 
 ## Installation
 
-```
-$ go get github.com/RasmusLindroth/go-mastodon
+```shell
+go install github.com/mattn/go-mastodon@latest
 ```
 
 ## License

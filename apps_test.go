@@ -27,7 +27,6 @@ func TestRegisterApp(t *testing.T) {
 			return
 		}
 		fmt.Fprintln(w, `{"id": 123, "client_id": "foo", "client_secret": "bar"}`)
-		return
 	}))
 	defer ts.Close()
 
@@ -79,7 +78,6 @@ func TestRegisterAppWithCancel(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(3 * time.Second)
 		fmt.Fprintln(w, `{"client_id": "foo", "client_secret": "bar"}`)
-		return
 	}))
 	defer ts.Close()
 
@@ -94,5 +92,51 @@ func TestRegisterAppWithCancel(t *testing.T) {
 	}
 	if want := fmt.Sprintf("Post %q: context canceled", ts.URL+"/api/v1/apps"); want != err.Error() {
 		t.Fatalf("want %q but %q", want, err.Error())
+	}
+}
+
+func TestVerifyAppCredentials(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer zoo" {
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+		if r.URL.Path != "/api/v1/apps/verify_credentials" {
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+			return
+		}
+		fmt.Fprintln(w, `{"name":"zzz","website":"yyy","vapid_key":"xxx"}`)
+	}))
+	defer ts.Close()
+
+	client := NewClient(&Config{
+		Server:       ts.URL,
+		ClientID:     "foo",
+		ClientSecret: "bar",
+		AccessToken:  "zip",
+	})
+	_, err := client.VerifyAppCredentials(context.Background())
+	if err == nil {
+		t.Fatalf("should be fail: %v", err)
+	}
+
+	client = NewClient(&Config{
+		Server:       ts.URL,
+		ClientID:     "foo",
+		ClientSecret: "bar",
+		AccessToken:  "zoo",
+	})
+	a, err := client.VerifyAppCredentials(context.Background())
+	if err != nil {
+		t.Fatalf("should not be fail: %v", err)
+	}
+	if a.Name != "zzz" {
+		t.Fatalf("want %q but %q", "zzz", a.Name)
+	}
+	if a.Website != "yyy" {
+		t.Fatalf("want %q but %q", "yyy", a.Name)
+	}
+	if a.VapidKey != "xxx" {
+		t.Fatalf("want %q but %q", "xxx", a.Name)
 	}
 }
