@@ -44,3 +44,12 @@ func (c *Client) TagUnfollow(ctx context.Context, tag string) (*Tag, error) {
 	}
 	return &hashtag, nil
 }
+
+func (c *Client) TagsFollowed(ctx context.Context, pg *Pagination) ([]*Tag, error) {
+	var hashtags []*Tag
+	err := c.doAPI(ctx, http.MethodGet, "/api/v1/followed_tags", nil, &hashtags, pg)
+	if err != nil {
+		return nil, err
+	}
+	return hashtags, nil
+}

@@ -198,3 +198,79 @@ func TestTagUnfollow(t *testing.T) {
 		t.Fatalf("want %v but %q", false, tag.Following)
 	}
 }
+
+func TestTagsFollowed(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, `
+		[{
+			"name": "test",
+			"url": "http://mastodon.example/tags/test",
+			"history": [
+			  {
+				"day": "1668124800",
+				"accounts": "1",
+				"uses": "2"
+			  },
+			  {
+				"day": "1668038400",
+				"accounts": "0",
+				"uses": "0"
+			  }
+			],
+			"following": true
+		},
+		{
+			"name": "foo",
+			"url": "http://mastodon.example/tags/foo",
+			"history": [
+			  {
+				"day": "1668124800",
+				"accounts": "1",
+				"uses": "2"
+			  },
+			  {
+				"day": "1668038400",
+				"accounts": "0",
+				"uses": "0"
+			  }
+			],
+			"following": true
+		}]`)
+	}))
+	defer ts.Close()
+
+	client := NewClient(&Config{
+		Server:       ts.URL,
+		ClientID:     "foo",
+		ClientSecret: "bar",
+		AccessToken:  "zoo",
+	})
+	tags, err := client.TagsFollowed(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("should not be fail: %v", err)
+	}
+	if len(tags) != 2 {
+		t.Fatalf("want %q but %q", 2, len(tags))
+	}
+	if tags[0].Name != "test" {
+		t.Fatalf("want %q but %q", "test", tags[0].Name)
+	}
+	if tags[0].URL != "http://mastodon.example/tags/test" {
+		t.Fatalf("want %q but %q", "http://mastodon.example/tags/test", tags[0].URL)
+	}
+	if len(tags[0].History) != 2 {
+		t.Fatalf("result should be two: %d", len(tags[0].History))
+	}
+	if tags[0].History[0].Day != "1668124800" {
+		t.Fatalf("want %q but %q", "1668124800", tags[0].History[0].Day)
+	}
+	if tags[0].History[0].Accounts != "1" {
+		t.Fatalf("want %q but %q", "1", tags[0].History[0].Accounts)
+	}
+	if tags[0].History[0].Uses != "2" {
+		t.Fatalf("want %q but %q", "2", tags[0].History[0].Uses)
+	}
+	if tags[0].Following != true {
+		t.Fatalf("want %v but %q", nil, tags[0].Following)
+	}
+}
