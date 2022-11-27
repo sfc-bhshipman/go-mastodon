@@ -271,10 +271,11 @@ func (c *Client) GetAccountRelationships(ctx context.Context, ids []string) ([]*
 }
 
 // AccountsSearch searches accounts by query.
-func (c *Client) AccountsSearch(ctx context.Context, q string, limit int64) ([]*Account, error) {
+func (c *Client) AccountsSearch(ctx context.Context, q string, limit int64, resolve bool) ([]*Account, error) {
 	params := url.Values{}
 	params.Set("q", q)
 	params.Set("limit", fmt.Sprint(limit))
+	params.Set("resolve", fmt.Sprint(resolve))
 
 	var accounts []*Account
 	err := c.doAPI(ctx, http.MethodGet, "/api/v1/accounts/search", params, &accounts, nil)
