@@ -570,7 +570,7 @@ func TestGetTimelineHashtag(t *testing.T) {
 	if err == nil {
 		t.Fatalf("should be fail: %v", err)
 	}
-	tags, err := client.GetTimelineHashtag(context.Background(), "zzz", true, nil)
+	s, err := client.GetTimelineHashtag(context.Background(), "zzz", true, nil)
 	if err != nil {
 		t.Fatalf("should not be fail: %v", err)
 	}
