@@ -54,7 +54,7 @@ func TestGetNotificationsExclude(t *testing.T) {
 	if ns[1].ID != "123" {
 		t.Fatalf("want %v but %v", "123", ns[1].ID)
 	}
-	nse, err := client.GetNotificationsExclude(context.Background(), &[]string{"follow"})
+	nse, err := client.GetNotificationsExclude(context.Background(), &[]string{"follow"}, nil)
 	if err != nil {
 		t.Fatalf("should not be fail: %v", err)
 	}
