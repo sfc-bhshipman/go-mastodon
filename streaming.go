@@ -32,6 +32,12 @@ type DeleteEvent struct{ ID ID }
 
 func (e *DeleteEvent) event() {}
 
+type ConversationEvent struct {
+	Conversation *Conversation `json:"conversation"`
+}
+
+func (e *ConversationEvent) event() {}
+
 // ErrorEvent is a struct for passing errors to app.
 type ErrorEvent struct{ err error }
 
@@ -86,6 +92,12 @@ func handleReader(q chan Event, r io.Reader) error {
 				err = json.Unmarshal([]byte(token[1]), &notification)
 				if err == nil {
 					q <- &NotificationEvent{&notification}
+				}
+			case "conversation":
+				var conversation Conversation
+				err = json.Unmarshal([]byte(token[1]), &conversation)
+				if err == nil {
+					q <- &ConversationEvent{&conversation}
 				}
 			case "delete":
 				q <- &DeleteEvent{ID: ID(strings.TrimSpace(token[1]))}
