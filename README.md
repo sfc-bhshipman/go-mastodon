@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/RasmusLindroth/go-mastodon"
+	"github.com/mattn/go-mastodon"
 )
 
 func main() {
@@ -51,7 +51,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/RasmusLindroth/go-mastodon"
+	"github.com/mattn/go-mastodon"
 )
 
 func main() {
@@ -107,6 +107,7 @@ func main() {
 * [x] GET /api/v1/follow_requests
 * [x] POST /api/v1/follow_requests/:id/authorize
 * [x] POST /api/v1/follow_requests/:id/reject
+* [x] GET /api/v1/followed_tags
 * [x] POST /api/v1/follows
 * [x] GET /api/v1/instance
 * [x] GET /api/v1/instance/activity
@@ -135,9 +136,12 @@ func main() {
 * [x] GET /api/v1/statuses/:id
 * [x] GET /api/v1/statuses/:id/context
 * [x] GET /api/v1/statuses/:id/card
+* [x] GET /api/v1/statuses/:id/history
 * [x] GET /api/v1/statuses/:id/reblogged_by
+* [x] GET /api/v1/statuses/:id/source
 * [x] GET /api/v1/statuses/:id/favourited_by
 * [x] POST /api/v1/statuses
+* [x] PUT /api/v1/statuses/:id
 * [x] DELETE /api/v1/statuses/:id
 * [x] POST /api/v1/statuses/:id/reblog
 * [x] POST /api/v1/statuses/:id/unreblog
@@ -145,16 +149,19 @@ func main() {
 * [x] POST /api/v1/statuses/:id/unfavourite
 * [x] POST /api/v1/statuses/:id/bookmark
 * [x] POST /api/v1/statuses/:id/unbookmark
-* [x] GET /api/v1/timelines/home
-* [x] GET /api/v1/timelines/public
-* [x] GET /api/v1/timelines/tag/:hashtag
-* [x] GET /api/v1/timelines/list/:id
 * [x] GET /api/v1/streaming/user
 * [x] GET /api/v1/streaming/public
 * [x] GET /api/v1/streaming/hashtag?tag=:hashtag
 * [x] GET /api/v1/streaming/hashtag/local?tag=:hashtag
 * [x] GET /api/v1/streaming/list?list=:list_id
 * [x] GET /api/v1/streaming/direct
+* [x] GET /api/v1/tags/:hashtag
+* [x] POST /api/v1/tags/:hashtag/follow
+* [x] POST /api/v1/tags/:hashtag/unfollow
+* [x] GET /api/v1/timelines/home
+* [x] GET /api/v1/timelines/public
+* [x] GET /api/v1/timelines/tag/:hashtag
+* [x] GET /api/v1/timelines/list/:id
 
 ## Installation
 

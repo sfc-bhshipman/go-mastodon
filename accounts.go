@@ -271,7 +271,20 @@ func (c *Client) GetAccountRelationships(ctx context.Context, ids []string) ([]*
 }
 
 // AccountsSearch searches accounts by query.
-func (c *Client) AccountsSearch(ctx context.Context, q string, limit int64, resolve bool) ([]*Account, error) {
+func (c *Client) AccountsSearch(ctx context.Context, q string, limit int64) ([]*Account, error) {
+	params := url.Values{}
+	params.Set("q", q)
+	params.Set("limit", fmt.Sprint(limit))
+
+	var accounts []*Account
+	err := c.doAPI(ctx, http.MethodGet, "/api/v1/accounts/search", params, &accounts, nil)
+	if err != nil {
+		return nil, err
+	}
+	return accounts, nil
+}
+
+func (c *Client) AccountsSearchResolve(ctx context.Context, q string, limit int64, resolve bool) ([]*Account, error) {
 	params := url.Values{}
 	params.Set("q", q)
 	params.Set("limit", fmt.Sprint(limit))

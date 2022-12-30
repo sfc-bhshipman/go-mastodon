@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -58,6 +59,32 @@ func TestStreamingWSHashtag(t *testing.T) {
 	wsTest(t, q, cancel)
 }
 
+func TestStreamingWSList(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(wsMock))
+	defer ts.Close()
+
+	client := NewClient(&Config{Server: ts.URL}).NewWSClient()
+	ctx, cancel := context.WithCancel(context.Background())
+	q, err := client.StreamingWSList(ctx, "123")
+	if err != nil {
+		t.Fatalf("should not be fail: %v", err)
+	}
+	wsTest(t, q, cancel)
+}
+
+func TestStreamingWSDirect(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(wsMock))
+	defer ts.Close()
+
+	client := NewClient(&Config{Server: ts.URL}).NewWSClient()
+	ctx, cancel := context.WithCancel(context.Background())
+	q, err := client.StreamingWSDirect(ctx)
+	if err != nil {
+		t.Fatalf("should not be fail: %v", err)
+	}
+	wsTest(t, q, cancel)
+}
+
 func wsMock(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/api/v1/streaming" {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
@@ -80,6 +107,13 @@ func wsMock(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = conn.WriteMessage(websocket.TextMessage,
+		[]byte(`{"event":"status.update","payload":"{\"content\":\"bar\"}"}`))
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	err = conn.WriteMessage(websocket.TextMessage,
 		[]byte(`{"event":"notification","payload":"{\"id\":123}"}`))
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -88,6 +122,13 @@ func wsMock(w http.ResponseWriter, r *http.Request) {
 
 	err = conn.WriteMessage(websocket.TextMessage,
 		[]byte(`{"event":"delete","payload":1234567}`))
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	err = conn.WriteMessage(websocket.TextMessage,
+		[]byte(`{"event":"conversation","payload":"{\"id\":819516}"}`))
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
@@ -111,25 +152,31 @@ func wsTest(t *testing.T, q chan Event, cancel func()) {
 	for e := range q {
 		events = append(events, e)
 	}
-	if len(events) != 6 {
-		t.Fatalf("result should be four: %d", len(events))
+	if len(events) != 8 {
+		t.Fatalf("result should be 8: %d", len(events))
 	}
 	if events[0].(*UpdateEvent).Status.Content != "foo" {
 		t.Fatalf("want %q but %q", "foo", events[0].(*UpdateEvent).Status.Content)
 	}
-	if events[1].(*NotificationEvent).Notification.ID != "123" {
-		t.Fatalf("want %q but %q", "123", events[1].(*NotificationEvent).Notification.ID)
+	if events[1].(*UpdateEditEvent).Status.Content != "bar" {
+		t.Fatalf("want %q but %q", "bar", events[1].(*UpdateEditEvent).Status.Content)
 	}
-	if events[2].(*DeleteEvent).ID != "1234567" {
-		t.Fatalf("want %q but %q", "1234567", events[2].(*DeleteEvent).ID)
+	if events[2].(*NotificationEvent).Notification.ID != "123" {
+		t.Fatalf("want %q but %q", "123", events[2].(*NotificationEvent).Notification.ID)
 	}
-	if errorEvent, ok := events[3].(*ErrorEvent); !ok {
-		t.Fatalf("should be fail: %v", errorEvent.err)
+	if events[3].(*DeleteEvent).ID != "1234567" {
+		t.Fatalf("want %q but %q", "1234567", events[3].(*DeleteEvent).ID)
 	}
-	if errorEvent, ok := events[4].(*ErrorEvent); !ok {
-		t.Fatalf("should be fail: %v", errorEvent.err)
+	if events[4].(*ConversationEvent).Conversation.ID != "819516" {
+		t.Fatalf("want %q but %q", "819516", events[4].(*ConversationEvent).Conversation.ID)
 	}
 	if errorEvent, ok := events[5].(*ErrorEvent); !ok {
+		t.Fatalf("should be fail: %v", errorEvent.err)
+	}
+	if errorEvent, ok := events[6].(*ErrorEvent); !ok {
+		t.Fatalf("should be fail: %v", errorEvent.err)
+	}
+	if errorEvent, ok := events[7].(*ErrorEvent); !ok {
 		t.Fatalf("should be fail: %v", errorEvent.err)
 	}
 }
@@ -151,12 +198,16 @@ func TestStreamingWS(t *testing.T) {
 	if err != nil {
 		t.Fatalf("should not be fail: %v", err)
 	}
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		e := <-q
 		if errorEvent, ok := e.(*ErrorEvent); !ok {
-			t.Fatalf("should be fail: %v", errorEvent.err)
+			t.Errorf("should be fail: %v", errorEvent.err)
 		}
 	}()
+	wg.Wait()
 }
 
 func TestHandleWS(t *testing.T) {
@@ -183,10 +234,13 @@ func TestHandleWS(t *testing.T) {
 	q := make(chan Event)
 	client := NewClient(&Config{}).NewWSClient()
 
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		e := <-q
 		if errorEvent, ok := e.(*ErrorEvent); !ok {
-			t.Fatalf("should be fail: %v", errorEvent.err)
+			t.Errorf("should be fail: %v", errorEvent.err)
 		}
 	}()
 	err := client.handleWS(context.Background(), ":", q)
@@ -196,10 +250,12 @@ func TestHandleWS(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		e := <-q
 		if errorEvent, ok := e.(*ErrorEvent); !ok {
-			t.Fatalf("should be fail: %v", errorEvent.err)
+			t.Errorf("should be fail: %v", errorEvent.err)
 		}
 	}()
 	err = client.handleWS(ctx, "ws://"+ts.Listener.Addr().String(), q)
@@ -207,13 +263,17 @@ func TestHandleWS(t *testing.T) {
 		t.Fatalf("should be fail: %v", err)
 	}
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		e := <-q
 		if errorEvent, ok := e.(*ErrorEvent); !ok {
-			t.Fatalf("should be fail: %v", errorEvent.err)
+			t.Errorf("should be fail: %v", errorEvent.err)
 		}
 	}()
 	client.handleWS(context.Background(), "ws://"+ts.Listener.Addr().String(), q)
+
+	wg.Wait()
 }
 
 func TestDialRedirect(t *testing.T) {

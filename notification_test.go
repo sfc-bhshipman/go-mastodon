@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestGetNotificationsExclude(t *testing.T) {
+func TestGetNotifications(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/api/v1/notifications":
@@ -64,7 +64,6 @@ func TestGetNotificationsExclude(t *testing.T) {
 	if nse[0].ID != "321" {
 		t.Fatalf("want %v but %v", "321", nse[0].ID)
 	}
-
 	n, err := client.GetNotification(context.Background(), "123")
 	if err != nil {
 		t.Fatalf("should not be fail: %v", err)

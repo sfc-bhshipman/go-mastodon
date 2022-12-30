@@ -40,6 +40,7 @@ func (c *Client) GetNotifications(ctx context.Context, pg *Pagination) ([]*Notif
 	return c.GetNotificationsExclude(ctx, nil, pg)
 }
 
+// GetNotificationsExclude returns notifications with excluded notifications
 func (c *Client) GetNotificationsExclude(ctx context.Context, exclude *[]string, pg *Pagination) ([]*Notification, error) {
 	var notifications []*Notification
 	params := url.Values{}
