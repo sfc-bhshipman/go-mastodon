@@ -52,6 +52,40 @@ func TestGetInstance(t *testing.T) {
 	}
 }
 
+func TestGetInstanceV2(t *testing.T) {
+	canErr := true
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if canErr {
+			canErr = false
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprintln(w, `{"domain":"mastodon.social","title":"Mastodon","version":"4.0.0rc1","source_url":"https://github.com/mastodon/mastodon","description":"The original server operated by the Mastodon gGmbH non-profit","usage":{"users":{"active_month":123122}},"thumbnail":{"url":"https://files.mastodon.social/site_uploads/files/000/000/001/@1x/57c12f441d083cde.png","blurhash":"UeKUpFxuo~R%0nW;WCnhF6RjaJt757oJodS$","versions":{"@1x":"https://files.mastodon.social/site_uploads/files/000/000/001/@1x/57c12f441d083cde.png","@2x":"https://files.mastodon.social/site_uploads/files/000/000/001/@2x/57c12f441d083cde.png"}},"languages":["en"],"configuration":{"urls":{"streaming":"wss://mastodon.social"},"accounts":{"max_featured_tags":10},"statuses":{"max_characters":500,"max_media_attachments":4,"characters_reserved_per_url":23},"media_attachments":{"supported_mime_types":["image/jpeg","image/png"],"image_size_limit":10485760,"image_matrix_limit":16777216,"video_size_limit":41943040,"video_frame_rate_limit":60,"video_matrix_limit":2304000},"polls":{"max_options":4,"max_characters_per_option":50,"min_expiration":300,"max_expiration":2629746},"translation":{"enabled":true}},"registrations":{"enabled":false,"approval_required":false,"message":null},"contact":{"email":"staff@mastodon.social","account":{"id":"1","username":"Gargron","acct":"Gargron","display_name":"Eugen 💀","locked":false,"bot":false,"discoverable":true,"group":false,"created_at":"2016-03-16T00:00:00.000Z","note":">","url":"https://mastodon.social/@Gargron","avatar":"","avatar_static":"","header":"","header_static":"","followers_count":133026,"following_count":311,"statuses_count":72605,"last_status_at":"2022-10-31","noindex":false,"emojis":[],"fields":[]}},"rules":[{"id":"1","text":"Behave"},{"id":"2","text":"Be nice"}]}`)
+	}))
+	defer ts.Close()
+
+	client := NewClient(&Config{
+		Server:       ts.URL,
+		ClientID:     "foo",
+		ClientSecret: "bar",
+		AccessToken:  "zoo",
+	})
+	_, err := client.GetInstance(context.Background())
+	if err == nil {
+		t.Fatalf("should be fail: %v", err)
+	}
+	ins, err := client.GetInstanceV2(context.Background())
+	if err != nil {
+		t.Fatalf("should not be fail: %v", err)
+	}
+	if ins.Title != "Mastodon" {
+		t.Fatalf("want %q but %q", "mastodon", ins.Title)
+	}
+	if ins.Domain != "mastodon.social" {
+		t.Fatalf("want %q but %q", "mastodon.social", ins.Domain)
+	}
+}
+
 func TestGetInstanceMore(t *testing.T) {
 	canErr := true
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

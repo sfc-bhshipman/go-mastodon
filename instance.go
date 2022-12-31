@@ -37,10 +37,87 @@ type InstanceStats struct {
 	DomainCount int64 `json:"domain_count"`
 }
 
+// Instance holds information for a mastodon instance
+type InstanceV2 struct {
+	Domain      string `json:"domain"`
+	Title       string `json:"title"`
+	Version     string `json:"version"`
+	SourceURL   string `json:"source_url"`
+	Description string `json:"description"`
+	Usage       struct {
+		Users struct {
+			ActiveMonth int `json:"active_month"`
+		} `json:"users"`
+	} `json:"usage"`
+	Thumbnail struct {
+		URL      string      `json:"url"`
+		Blurhash interface{} `json:"blurhash"`
+		Versions struct {
+			One_X interface{} `json:"@1x"`
+			Two_X interface{} `json:"@2x"`
+		} `json:"versions"`
+	} `json:"thumbnail"`
+	Languages     []string `json:"languages"`
+	Configuration struct {
+		Urls struct {
+			Streaming string `json:"streaming"`
+		} `json:"urls"`
+		Accounts struct {
+			MaxFeaturedTags int `json:"max_featured_tags"`
+		} `json:"accounts"`
+		Statuses struct {
+			MaxCharacters            int `json:"max_characters"`
+			MaxMediaAttachments      int `json:"max_media_attachments"`
+			CharactersReservedPerURL int `json:"characters_reserved_per_url"`
+		} `json:"statuses"`
+		MediaAttachments struct {
+			SupportedMimeTypes  []string `json:"supported_mime_types"`
+			ImageSizeLimit      int      `json:"image_size_limit"`
+			ImageMatrixLimit    int      `json:"image_matrix_limit"`
+			VideoSizeLimit      int      `json:"video_size_limit"`
+			VideoFrameRateLimit int      `json:"video_frame_rate_limit"`
+			VideoMatrixLimit    int      `json:"video_matrix_limit"`
+		} `json:"media_attachments"`
+		Polls struct {
+			MaxOptions             int `json:"max_options"`
+			MaxCharactersPerOption int `json:"max_characters_per_option"`
+			MinExpiration          int `json:"min_expiration"`
+			MaxExpiration          int `json:"max_expiration"`
+		} `json:"polls"`
+		Translation struct {
+			Enabled bool `json:"enabled"`
+		} `json:"translation"`
+	} `json:"configuration"`
+	Registrations struct {
+		Enabled          bool        `json:"enabled"`
+		ApprovalRequired bool        `json:"approval_required"`
+		Message          interface{} `json:"message"`
+	} `json:"registrations"`
+	Contact struct {
+		Email   string `json:"email"`
+		Account *Account
+	} `json:"contact"`
+	Rules []Rule `json:"rules"`
+}
+
+type Rule struct {
+	ID   string `json:"id"`
+	Text string `json:"text"`
+}
+
 // GetInstance returns Instance.
 func (c *Client) GetInstance(ctx context.Context) (*Instance, error) {
 	var instance Instance
 	err := c.doAPI(ctx, http.MethodGet, "/api/v1/instance", nil, &instance, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &instance, nil
+}
+
+func (c *Client) GetInstanceV2(ctx context.Context) (*InstanceV2, error) {
+	var instance InstanceV2
+	err := c.doAPI(ctx, http.MethodGet, "/api/v2/instance", nil, &instance, nil)
 	if err != nil {
 		return nil, err
 	}
