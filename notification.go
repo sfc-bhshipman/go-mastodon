@@ -19,6 +19,7 @@ type Notification struct {
 	CreatedAt time.Time `json:"created_at"`
 	Account   Account   `json:"account"`
 	Status    *Status   `json:"status"`
+	Emoji     string    `json:"emoji"`
 }
 
 type PushSubscription struct {
